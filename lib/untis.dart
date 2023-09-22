@@ -4,8 +4,8 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
 import 'package:string_similarity/string_similarity.dart';
 
 /// Asynchronous Dart wrapper for the WebUntis API.
@@ -28,16 +28,13 @@ class Session {
   final String server, school, username, _password, userAgent;
 
   int _requestId = 0;
-  late final IOClient _http;
 
   final LinkedHashMap<String, _CacheEntry> _cache = LinkedHashMap();
   int cacheLengthMaximum = 20;
   int cacheDisposeTime = 30;
 
   Session._internal(this.server, this.school, this.username, this._password, this.userAgent) {
-    final ioc = HttpClient();
-    ioc.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
-    _http = IOClient(ioc);
+    if (!kIsWeb) HttpOverrides.global = InsecureHttpOverrides();
   }
 
   static Future<Session> init(String server, String school, String username, String password,
@@ -65,7 +62,7 @@ class Session {
       }
       response = _cache[requestBodyAsString]!.value;
     } else {
-      response = await _http.post(url, body: requestBodyAsString, headers: {"Cookie": "JSESSIONID=$_sessionId"});
+      response = await http.post(url, body: requestBodyAsString, headers: {"Cookie": "JSESSIONID=$_sessionId"});
     }
 
     _cache[requestBodyAsString] = _CacheEntry(DateTime.now(), response);
@@ -500,12 +497,13 @@ class IdProvider {
   @override
   String toString() => "IdProvider<type:${type.toString()}, id:$id>";
 
+  @override
   bool operator ==(other) {
     return (other is IdProvider && other.type == type && other.id == id);
   }
 
+  @override
   int get hashCode => hashCode;
-
 }
 
 class _CacheEntry {
@@ -513,4 +511,12 @@ class _CacheEntry {
   final http.Response value;
 
   _CacheEntry(this.creationTime, this.value);
+}
+
+class InsecureHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
 }
