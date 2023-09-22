@@ -81,7 +81,7 @@ class Session {
       _cache.remove(_cache.keys.take(1).toList()[0].toString());
     }
 
-    LinkedHashMap<String, dynamic> responseBody = jsonDecode(response.data);
+    Map<String, dynamic> responseBody = jsonDecode(response.data);
 
     if (response.statusCode != 200 || responseBody.containsKey("error")) {
       int untisErrorCode = responseBody["error"]["code"];
