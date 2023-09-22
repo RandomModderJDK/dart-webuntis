@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:string_similarity/string_similarity.dart';
 
 /// Asynchronous Dart wrapper for the WebUntis API.
@@ -36,6 +37,7 @@ class Session {
 
   Session._internal(this.server, this.school, this.username, this._password, this.userAgent) {
     _http = Dio();
+    if (kIsWeb) return;
     _http.httpClientAdapter = IOHttpClientAdapter(createHttpClient: () {
       final HttpClient client = HttpClient();
       client.badCertificateCallback = (cert, host, port) => true;
