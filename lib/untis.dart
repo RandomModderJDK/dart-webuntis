@@ -72,8 +72,8 @@ class Session {
       }
       response = _cache[requestBodyAsString]!.value;
     } else {
-      response = await _http.postUri(url,
-          data: requestBodyAsString, options: Options(headers: {"Cookie": "JSESSIONID=$_sessionId"}));
+      _http.options.headers["Cookie"] = "JSESSIONID=$_sessionId";
+      response = await _http.postUri(url, data: requestBodyAsString);
     }
 
     _cache[requestBodyAsString] = _CacheEntry(DateTime.now(), response);
